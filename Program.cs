@@ -9,25 +9,42 @@ public class Program
    {
       var controller = new NumbersController();
 
-      Console.WriteLine("Press a key to generate a combination...");
+      while (true)
+      {
+         Run(controller);
+      }
+   }
+
+   public static void Run(NumbersController controller)
+   {
+      Console.ForegroundColor = ConsoleColor.Cyan;
+      Console.WriteLine("[generate]");
+      Console.ForegroundColor = ConsoleColor.White;
+
       Console.ReadKey(true);
+      
+      Console.SetCursorPosition(0, Console.CursorTop - 1);
+
+      Console.Write("Numbers: ");
 
       //create large and small numbers
-      foreach (var number in controller.GetNumbers())
+      //todo - player chooses how many large
+      foreach (var number in controller.GetNumbersCheat(50,25,7,5,6,1,345))
       {
          Console.Write(number.ToString() + " ");
       }
       Console.Write("\b");
       Console.WriteLine();
 
-      Console.WriteLine("Target to reach: " + controller.GetTarget());
+      Console.WriteLine("Target:  " + controller.GetTarget());
 
-      Console.WriteLine("Press a key to see the answer...");
-      Console.ReadKey(true);
+      Console.ForegroundColor = ConsoleColor.Cyan;
+      Console.WriteLine("[show working]");
+      Console.ForegroundColor = ConsoleColor.DarkGray;
 
-      Console.WriteLine(controller.GetSolution(null, null).ToString());
-      Console.WriteLine("Press a key to exit.");
       Console.ReadKey(true);
+      Console.SetCursorPosition(0, Console.CursorTop - 1);
+      Console.WriteLine(controller.GetSolution(null, null).ToString().TrimEnd('\n') + "\n");
    }
 }
 
@@ -35,12 +52,12 @@ public class NumbersController
 {
    private Random _random;
 
-   //todo - add user choosing large and small numbers
-   //todo - create some sort of algorithm for deciding the _minTarget based on how many large and small
-   // maybe a timeout for calculating _minTarget, which automatically reduces it
-   private int _numberCount = 6;
-   private int _minTarget = 100;
-   private int _maxTarget = 999;
+   private const int _attemptsChunkSize = 100000;
+   private const int _numberCount = 6;
+   private const int _maxTargetBase = 999;
+   private const int _minTargetBase = 100;
+   private int _maxTarget;
+   private int _minTarget;
    private IList<double> _numbers;
    private IOperable _solution;
 
@@ -52,24 +69,74 @@ public class NumbersController
 
    public IList<double> GetNumbers()
    {
-      //sample code adding all small numbers
-      //todo - replace this with input from user getting how many large and how many small
-      for (var i = 0; i < _numberCount; i++)
+      return GetNumbers(_random.Next(0, 7));
+   }
+
+   public IList<double> GetNumbers(int largeCount)
+   {
+      if (largeCount < 0) largeCount = _random.Next(0,7);
+
+      _maxTarget = _maxTargetBase;
+      _minTarget = 100 * (largeCount + 1);
+
+      _numbers.Clear();
+
+      //adding large numbers
+      for (var i = 0; i < largeCount; i++)
       {
-         var number = _random.Next(1, 10);
+         var index = _random.Next(0, 4);
+         switch (index)
+         {
+            case 0:
+               _numbers.Add(25);
+               break;
+            case 1:
+               _numbers.Add(50);
+               break;
+            case 2:
+               _numbers.Add(75);
+               break;
+            case 3:
+               _numbers.Add(100);
+               break;
+         }
+      }
+
+      //adding small numbers
+      var small = _numberCount - largeCount;
+      for (var i = 0; i < small; i++)
+      {
+         var number = _random.Next(1, 11);
          _numbers.Add(number);
       }
 
       return _numbers;
    }
 
+   public IList<double> GetNumbersCheat(int a, int b, int c, int d, int e, int f, int target)
+   {
+      _minTarget = _maxTarget = target;
+      _numbers.Clear();
+      _numbers.Add(a);
+      _numbers.Add(b);
+      _numbers.Add(c);
+      _numbers.Add(d);
+      _numbers.Add(e);
+      _numbers.Add(f);
+
+      return _numbers;
+   }
+
    public double GetTarget()
    {
-      var attempts = 0;
+      var attempts = 1;
+      var attemptChunks = 0;
+      var maxTarget = _maxTarget;
+      var minTarget = _minTarget;
 
       var operables = GetFreshOperables();
 
-      while (!operables.Any(o => o.Value > _minTarget) && operables.All(o => o.Value <= _maxTarget))
+      while (!operables.Any(o => o.Value >= minTarget))
       {
          var successfulOperation = false;
 
@@ -93,7 +160,13 @@ public class NumbersController
             operable = new Operation(firstOperable, operation, secondOperable);
 
             var operableValue = operable.Value;
-            if ((operableValue != 0.0) && (operableValue % 1 == 0.0))
+            if (
+               (operableValue != 0.0)
+               && (operableValue % 1 == 0.0)
+               && !(operable.Type == Enums.OperationType.Multiply && operable.FirstNumber.Value == 1)
+               && !(operable.Type == Enums.OperationType.Multiply && operable.SecondNumber.Value == 1)
+               && !(operable.Type == Enums.OperationType.Divide && operable.SecondNumber.Value == 1)
+               && !(operable.Type == Enums.OperationType.Divide && operable.FirstNumber.Value == 1))
             {
                successfulOperation = true;
             }
@@ -107,14 +180,28 @@ public class NumbersController
          operables.Add(operable);
          
          //if there's only 1 operable in the list, we have used up the numbers and failed, so try again
-         if (operables.Count < 2)
+         //OR if any operables have hit the max size result, try again
+         if ((operables.Count < 2) || (operables.Any(o => o.Value > maxTarget)))
          {
             operables = GetFreshOperables();
             attempts++;
          }
+
+         //we probably have a number list, and target range which has no solution
+         // so increase target range upper limit a little bit and keep trying
+         if (attempts > _attemptsChunkSize)
+         {
+            maxTarget += _maxTarget;
+            minTarget -= Math.Max(_minTarget / 2, 1);
+
+            attempts = 0;
+            attemptChunks++;
+         }
       }
 
-      _solution = operables.First(o => o.Value > _minTarget);
+      _solution = operables.First(o => o.Value >= minTarget);
+
+      //Console.WriteLine("(" + (attempts + (attemptChunks * attemptsChunkSize)) + " attempts)");
 
       return _solution.Value;
    }
@@ -160,7 +247,7 @@ public class NumbersController
                break;
          }
 
-         stringBuilder.AppendFormat("{0} = {1}\n", operable.SecondNumber.Value, operable.Value);
+         stringBuilder.AppendFormat("{0} = {1}     \n", operable.SecondNumber.Value, operable.Value);
       }
 
       return stringBuilder;
