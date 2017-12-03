@@ -19,6 +19,11 @@ public class TimerController : MonoBehaviour
    private float _timerSeconds;
    private bool _runTimer;
 
+   public void ToggleTimer()
+   {
+      gameObject.SetActive(!gameObject.activeSelf);
+   }
+
    public void ShowTimer()
    {
       gameObject.SetActive(true);

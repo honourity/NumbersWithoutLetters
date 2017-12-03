@@ -39,8 +39,13 @@ public class UserInterfaceManager : MonoBehaviour
 
    public void ShowSolutionButtonPressed()
    {
-      _timerController.HideTimer();
-      ShowSolution();
+      _timerController.ToggleTimer();
+      ToggleSolution();
+   }
+
+   private void ToggleSolution()
+   {
+      _solutionText.gameObject.SetActive(!_solutionText.gameObject.activeSelf);
    }
 
    private void HideSolution()
