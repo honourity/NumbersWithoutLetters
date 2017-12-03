@@ -1190,3 +1190,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _hand: {fileID: 486378919}
   _timerLength: 30
+  _fullRevolutionTime: 30
+  timeLeftStartColourChange: 10
+  timeLeftSolidColour: 1
