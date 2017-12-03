@@ -16,17 +16,20 @@ public class UserInterfaceManager : MonoBehaviour
    [SerializeField]
    private TimerController _timerController;
 
+   private int _largeCountChosen = -1;
+
    public void Clear()
    {
       _numbersText.text = string.Empty;
       _targetText.text = string.Empty;
       _solutionText.text = string.Empty;
+      _largeCountChosen = -1;
    }
 
    public void GenerateButtonPressed()
    {
       //todo - add interface to read in number of large numbers instead of random selection
-      GameManager.Instance.NumbersController.PopulateNumbers();
+      GameManager.Instance.NumbersController.PopulateNumbers(_largeCountChosen);
 
       GameManager.Instance.NumbersController.GenerateSolution();
       PopulateNumbers();
@@ -39,8 +42,13 @@ public class UserInterfaceManager : MonoBehaviour
 
    public void ShowSolutionButtonPressed()
    {
-      _timerController.ToggleTimer();
+      //_timerController.ToggleTimer();
       ToggleSolution();
+   }
+
+   public void SetLargeNumbersCount(int largeCount)
+   {
+      _largeCountChosen = largeCount;
    }
 
    private void ToggleSolution()

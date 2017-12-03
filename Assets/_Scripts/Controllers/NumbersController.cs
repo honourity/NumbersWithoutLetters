@@ -32,8 +32,7 @@ public class NumbersController : MonoBehaviour
    {
       if (largeCount > _maxLargeNumbers || largeCount < 0)
       {
-         Debug.LogWarning("Invalid quantity of large numbers requested. Defaulting to maximum allowed.");
-         largeCount = _maxLargeNumbers;
+         largeCount = _random.Next(0, _maxLargeNumbers+1);
       }
 
       _maxTarget = _maxTargetBase;
