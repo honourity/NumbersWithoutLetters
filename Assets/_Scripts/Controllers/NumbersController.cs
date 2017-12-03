@@ -2,79 +2,41 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using UnityEngine;
 
-public class Program
+public class NumbersController : MonoBehaviour
 {
-   public static void Main(string[] args)
-   {
-      var controller = new NumbersController();
+   [SerializeField]
+   private int _maxLargeNumbers = 4;
+   [SerializeField]
+   private bool _allowNegativeResults = false;
+   [SerializeField]
+   private int _attemptsChunkSize = 100000;
+   [SerializeField]
+   private int _numberCount = 6;
+   [SerializeField]
+   private int _maxTargetBase = 999;
 
-      while (true)
-      {
-         Run(controller);
-      }
-   }
-
-   public static void Run(NumbersController controller)
-   {
-      Console.ForegroundColor = ConsoleColor.Cyan;
-      Console.WriteLine("[generate]");
-      Console.ForegroundColor = ConsoleColor.White;
-
-      Console.ReadKey(true);
-      
-      Console.SetCursorPosition(0, Console.CursorTop - 1);
-
-      Console.Write("Numbers: ");
-
-      //create large and small numbers
-      //todo - player chooses how many large
-      foreach (var number in controller.GetNumbersCheat(50,25,7,5,6,1,345))
-      {
-         Console.Write(number.ToString() + " ");
-      }
-      Console.Write("\b");
-      Console.WriteLine();
-
-      Console.WriteLine("Target:  " + controller.GetTarget());
-
-      Console.ForegroundColor = ConsoleColor.Cyan;
-      Console.WriteLine("[show working]");
-      Console.ForegroundColor = ConsoleColor.DarkGray;
-
-      Console.ReadKey(true);
-      Console.SetCursorPosition(0, Console.CursorTop - 1);
-      Console.WriteLine(controller.GetSolution(null, null).ToString().TrimEnd('\n') + "\n");
-   }
-}
-
-public class NumbersController
-{
-   private Random _random;
-
-   private const int _attemptsChunkSize = 100000;
-   private const int _numberCount = 6;
-   private const int _maxTargetBase = 999;
-   private const int _minTargetBase = 100;
-   private int _maxTarget;
-   private int _minTarget;
+   private System.Random _random;
+   private double _maxTarget;
+   private double _minTarget;
    private IList<double> _numbers;
+   private double _target;
    private IOperable _solution;
 
-   public NumbersController()
+   public IList<double> PopulateNumbers()
    {
-      _random = new Random();
-      _numbers = new List<double>();
+      //remember random end of range is exclusive not inclusive
+      return PopulateNumbers(_random.Next(0, _maxLargeNumbers));
    }
 
-   public IList<double> GetNumbers()
+   public IList<double> PopulateNumbers(int largeCount)
    {
-      return GetNumbers(_random.Next(0, 7));
-   }
-
-   public IList<double> GetNumbers(int largeCount)
-   {
-      if (largeCount < 0) largeCount = _random.Next(0,7);
+      if (largeCount > _maxLargeNumbers || largeCount < 0)
+      {
+         Debug.LogWarning("Invalid quantity of large numbers requested. Defaulting to maximum allowed.");
+         largeCount = _maxLargeNumbers;
+      }
 
       _maxTarget = _maxTargetBase;
       _minTarget = 100 * (largeCount + 1);
@@ -113,28 +75,28 @@ public class NumbersController
       return _numbers;
    }
 
-   public IList<double> GetNumbersCheat(int a, int b, int c, int d, int e, int f, int target)
+   public IList<double> PopulateNumbers(double number1, double number2, double number3, double number4, double number5, double number6, double target)
    {
       _minTarget = _maxTarget = target;
       _numbers.Clear();
-      _numbers.Add(a);
-      _numbers.Add(b);
-      _numbers.Add(c);
-      _numbers.Add(d);
-      _numbers.Add(e);
-      _numbers.Add(f);
+      _numbers.Add(number1);
+      _numbers.Add(number2);
+      _numbers.Add(number3);
+      _numbers.Add(number4);
+      _numbers.Add(number5);
+      _numbers.Add(number6);
 
       return _numbers;
    }
 
-   public double GetTarget()
+   public void GenerateSolution()
    {
       var attempts = 1;
       var attemptChunks = 0;
       var maxTarget = _maxTarget;
       var minTarget = _minTarget;
 
-      var operables = GetFreshOperables();
+      var operables = GetFreshOperables(_numbers);
 
       while (!operables.Any(o => o.Value >= minTarget))
       {
@@ -178,12 +140,12 @@ public class NumbersController
 
          //inject our new operation back into the operables list
          operables.Add(operable);
-         
+
          //if there's only 1 operable in the list, we have used up the numbers and failed, so try again
          //OR if any operables have hit the max size result, try again
          if ((operables.Count < 2) || (operables.Any(o => o.Value > maxTarget)))
          {
-            operables = GetFreshOperables();
+            operables = GetFreshOperables(_numbers);
             attempts++;
          }
 
@@ -203,18 +165,7 @@ public class NumbersController
 
       //Console.WriteLine("(" + (attempts + (attemptChunks * attemptsChunkSize)) + " attempts)");
 
-      return _solution.Value;
-   }
-
-   private IList<IOperable> GetFreshOperables()
-   {
-      var operables = new List<IOperable>();
-      foreach (var number in _numbers)
-      {
-         operables.Add(new Number(number));
-      }
-
-      return operables;
+      _target = _solution.Value;
    }
 
    public StringBuilder GetSolution(IOperable operable, StringBuilder stringBuilder)
@@ -252,69 +203,23 @@ public class NumbersController
 
       return stringBuilder;
    }
-}
 
-public interface IOperable
-{
-   double Value { get; }
-
-   IOperable FirstNumber { get; }
-   Enums.OperationType Type { get; }
-   IOperable SecondNumber { get; }
-}
-
-public class Enums
-{
-   public enum OperationType
+   private void Awake()
    {
-      None = 0,
-      Add = 1,
-      Subtract = 2,
-      Multiply = 3,
-      Divide = 4
+      _numbers = new List<double>();
+      _random = new System.Random();
    }
-}
 
-public class Operation : IOperable
-{
-   public double Value
+   private IList<IOperable> GetFreshOperables(IList<double> numbers)
    {
-      get
+      _numbers = numbers;
+
+      var operables = new List<IOperable>();
+      foreach (var number in numbers)
       {
-         switch (Type)
-         {
-            case Enums.OperationType.Add: return FirstNumber.Value + SecondNumber.Value;
-            case Enums.OperationType.Subtract: return FirstNumber.Value - SecondNumber.Value;
-            case Enums.OperationType.Multiply: return FirstNumber.Value * SecondNumber.Value;
-            case Enums.OperationType.Divide: return FirstNumber.Value / SecondNumber.Value;
-            default: return -1;
-         }
+         operables.Add(new Number(number));
       }
-   }
 
-   public IOperable FirstNumber { get; private set; }
-   public Enums.OperationType Type { get; private set; }
-   public IOperable SecondNumber { get; private set; }
-
-   public Operation(IOperable firstNumber, Enums.OperationType type, IOperable secondNumber)
-   {
-      Type = type;
-      FirstNumber = firstNumber;
-      SecondNumber = secondNumber;
-   }
-}
-
-public class Number : IOperable
-{
-   public double Value { get; private set; }
-
-   public IOperable FirstNumber { get; private set; }
-   public Enums.OperationType Type { get; private set; }
-   public IOperable SecondNumber { get; private set; }
-
-   public Number(double value)
-   {
-      Value = value;
-      Type = Enums.OperationType.None;
+      return operables;
    }
 }

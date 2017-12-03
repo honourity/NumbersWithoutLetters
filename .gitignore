@@ -31,4 +31,18 @@ sysinfo.txt
 
 # Builds
 *.apk
-*.unitypackage
+#removed for thirdparty plugin reasons
+#*.unitypackage
+
+
+#custom extra stuff
+#!Assets/Dialogue System/*/*.unitypackage
+Assets/External Assets/Arvz-Only Assets.meta
+Assets/External Assets/Arvz-Only Assets/
+Assets/External Assets/Models/Archive/
+Assets/External Assets/Models/Archive.meta
+GIFs/
+Assets/Plugins/Arvz-Only Plugins/
+Assets/Plugins/Arvz-Only Plugins.meta
+Assets/_DEV/
+Assets/_Dev.meta
