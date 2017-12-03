@@ -13,6 +13,8 @@ public class UserInterfaceManager : MonoBehaviour
    private Text _targetText;
    [SerializeField]
    private Text _solutionText;
+   [SerializeField]
+   private TimerController _timerController;
 
    public void Clear()
    {
@@ -31,10 +33,13 @@ public class UserInterfaceManager : MonoBehaviour
       PopulateTarget();
       PopulateSolution();
       HideSolution();
+      _timerController.ShowTimer();
+      _timerController.ResetTimer();
    }
 
    public void ShowSolutionButtonPressed()
    {
+      _timerController.HideTimer();
       ShowSolution();
    }
 
