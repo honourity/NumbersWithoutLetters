@@ -2,16 +2,14 @@
 
 public class GameManager : MonoBehaviour
 {
-   public static GameManager Instance { get { return _instance = Instance ?? FindObjectOfType<GameManager>(); } }
+   public static GameManager Instance { get { return _instance = _instance ?? FindObjectOfType<GameManager>(); } }
    private static GameManager _instance;
+
+   public NumbersController NumbersController { get { return _numbersController = _numbersController ?? FindObjectOfType<NumbersController>(); } }
+   private NumbersController _numbersController;
 
    private void Start()
    {
-
-   }
-
-   private void Update()
-   {
-
+      UserInterfaceManager.Instance.Clear();
    }
 }

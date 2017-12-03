@@ -9,8 +9,6 @@ public class NumbersController : MonoBehaviour
    [SerializeField]
    private int _maxLargeNumbers = 4;
    [SerializeField]
-   private bool _allowNegativeResults = false;
-   [SerializeField]
    private int _attemptsChunkSize = 100000;
    [SerializeField]
    private int _numberCount = 6;
@@ -121,14 +119,17 @@ public class NumbersController : MonoBehaviour
             var operation = (Enums.OperationType)_random.Next(1, 5);
             operable = new Operation(firstOperable, operation, secondOperable);
 
+            //check against ruleset for allowed operations
             var operableValue = operable.Value;
             if (
                (operableValue != 0.0)
                && (operableValue % 1 == 0.0)
+               && !(operableValue < 0.0)
                && !(operable.Type == Enums.OperationType.Multiply && operable.FirstNumber.Value == 1)
                && !(operable.Type == Enums.OperationType.Multiply && operable.SecondNumber.Value == 1)
                && !(operable.Type == Enums.OperationType.Divide && operable.SecondNumber.Value == 1)
-               && !(operable.Type == Enums.OperationType.Divide && operable.FirstNumber.Value == 1))
+               && !(operable.Type == Enums.OperationType.Divide && operable.FirstNumber.Value == 1)
+               )
             {
                successfulOperation = true;
             }
@@ -168,7 +169,17 @@ public class NumbersController : MonoBehaviour
       _target = _solution.Value;
    }
 
-   public StringBuilder GetSolution(IOperable operable, StringBuilder stringBuilder)
+   public IList<double> GetNumbers()
+   {
+      return _numbers;
+   }
+
+   public double GetTarget()
+   {
+      return _target;
+   }
+
+   public StringBuilder GetSolution(IOperable operable = null, StringBuilder stringBuilder = null)
    {
       if (operable == null) operable = _solution;
       if (stringBuilder == null) stringBuilder = new StringBuilder();
@@ -198,7 +209,7 @@ public class NumbersController : MonoBehaviour
                break;
          }
 
-         stringBuilder.AppendFormat("{0} = {1}     \n", operable.SecondNumber.Value, operable.Value);
+         stringBuilder.AppendFormat("{0} = {1}\n", operable.SecondNumber.Value, operable.Value);
       }
 
       return stringBuilder;
