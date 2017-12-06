@@ -28,7 +28,9 @@ public class UserInterfaceManager : MonoBehaviour
 
    public void GenerateButtonPressed()
    {
-      //todo - add interface to read in number of large numbers instead of random selection
+      //hard one
+      //GameManager.Instance.NumbersController.PopulateNumbers(75,25,50,100,8,2,431);
+
       GameManager.Instance.NumbersController.PopulateNumbers(_largeCountChosen);
 
       GameManager.Instance.NumbersController.GenerateSolution();
@@ -38,6 +40,10 @@ public class UserInterfaceManager : MonoBehaviour
       HideSolution();
       _timerController.ShowTimer();
       _timerController.ResetTimer();
+
+
+      //todo - remove this
+      ShowSolution();
    }
 
    public void ShowSolutionButtonPressed()

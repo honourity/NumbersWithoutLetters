@@ -36,7 +36,7 @@ public class NumbersController : MonoBehaviour
       }
 
       _maxTarget = _maxTargetBase;
-      _minTarget = 100 * (largeCount + 1);
+      _minTarget = Math.Min(100 * (largeCount + 1), _maxTarget);
 
       _numbers.Clear();
 
@@ -95,7 +95,7 @@ public class NumbersController : MonoBehaviour
 
       var operables = GetFreshOperables(_numbers);
 
-      while (!operables.Any(o => o.Value >= minTarget))
+      while (operables.Count > 1 || (operables.FirstOrDefault().Value < minTarget || operables.FirstOrDefault().Value > maxTarget))
       {
          var successfulOperation = false;
 
@@ -143,7 +143,7 @@ public class NumbersController : MonoBehaviour
 
          //if there's only 1 operable in the list, we have used up the numbers and failed, so try again
          //OR if any operables have hit the max size result, try again
-         if ((operables.Count < 2) || (operables.Any(o => o.Value > maxTarget)))
+         if ((operables.Count < 2) && (operables.FirstOrDefault().Value < minTarget || operables.FirstOrDefault().Value > maxTarget))
          {
             operables = GetFreshOperables(_numbers);
             attempts++;
