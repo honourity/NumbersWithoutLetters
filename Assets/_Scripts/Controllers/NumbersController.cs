@@ -40,25 +40,18 @@ public class NumbersController : MonoBehaviour
 
       _numbers.Clear();
 
+      var largeNumberLibrary = new List<double>();
+      largeNumberLibrary.Add(25);
+      largeNumberLibrary.Add(50);
+      largeNumberLibrary.Add(75);
+      largeNumberLibrary.Add(100);
+
       //adding large numbers
       for (var i = 0; i < largeCount; i++)
       {
-         var index = _random.Next(0, 4);
-         switch (index)
-         {
-            case 0:
-               _numbers.Add(25);
-               break;
-            case 1:
-               _numbers.Add(50);
-               break;
-            case 2:
-               _numbers.Add(75);
-               break;
-            case 3:
-               _numbers.Add(100);
-               break;
-         }
+         var index = _random.Next(0, largeNumberLibrary.Count);
+         _numbers.Add(largeNumberLibrary.ElementAt(index));
+         largeNumberLibrary.RemoveAt(index);
       }
 
       //adding small numbers

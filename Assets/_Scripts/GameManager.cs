@@ -11,5 +11,6 @@ public class GameManager : MonoBehaviour
    private void Start()
    {
       UserInterfaceManager.Instance.Clear();
+      Screen.orientation = ScreenOrientation.Portrait;
    }
 }

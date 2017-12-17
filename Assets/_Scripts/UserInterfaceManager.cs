@@ -40,10 +40,6 @@ public class UserInterfaceManager : MonoBehaviour
       HideSolution();
       _timerController.ShowTimer();
       _timerController.ResetTimer();
-
-
-      //todo - remove this
-      ShowSolution();
    }
 
    public void ShowSolutionButtonPressed()
